@@ -1,0 +1,9 @@
+name: Publish new version
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish-new-version:
+    uses: svvsaga/github-actions-public/.github/workflows/bump-semantic-version.yml@v3.8.2
