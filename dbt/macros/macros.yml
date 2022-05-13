@@ -1,0 +1,11 @@
+version: 2
+
+macros:
+  - name: get_custom_schema_for_env
+    description: "{{ doc('get_custom_schema_for_env') }}"
+
+  - name: grant_access_for_all_authorized_views
+    description: "{{ doc('grant_access_for_all_authorized_views') }}"
+
+  - name: generate_model_yaml
+    description: "{{ doc('generate_model_yaml') }}"
