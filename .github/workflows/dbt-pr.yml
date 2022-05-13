@@ -1,0 +1,138 @@
+name: Check dbt SQL formatting with SQLfluff
+
+on:
+  workflow_call:
+    inputs:
+      dbt_path:
+        description: Path to folder with dbt project (without trailing slash)
+        type: string
+        required: true
+      dbt_args:
+        description: Extra arguments to dbt, typically --target and --profile
+        type: string
+        required: true
+      dbt_project_name:
+        description: Name of the dbt project, used to select only models from this project for dbt run/test
+        type: string
+        required: true
+      stm_credentials_file:
+        description: File name to use for STM credentials, referred in target profile
+        type: string
+        required: true
+      stm_project_id:
+        description: ID of STM project on Google cloud
+        type: string
+        required: true
+      stm_docs_bucket:
+        description: Name of docs bucket in STM (without gs://)
+        type: string
+        required: true
+      atm_docs_bucket:
+        description: Name of docs bucket in ATM (without gs://)
+        type: string
+        required: true
+    secrets:
+      stm_key:
+        description: Base64-encoded JSON key for STM
+        required: true
+      atm_key:
+        description: Base64-encoded JSON key for ATM
+        required: true
+
+env:
+  ATM_CREDENTIALS_FILE: ./creds_ATM.json
+  DBT_DATASET: pr_${{ github.event.pull_request.number }}_${{ github.run_number }}_${{ github.run_attempt }}
+
+jobs:
+  test:
+    name: Run dbt unit tests, generate docs
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.dbt_path }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@master
+
+      - name: Install python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.7.x"
+
+      - name: Write STM credentials file
+        run: 'echo "$KEYFILE" | base64 -d > ${{ inputs.stm_credentials_file }}'
+        shell: bash
+        env:
+          KEYFILE: ${{ secrets.stm_key }}
+
+      - name: Write ATM credentials file
+        run: 'echo "$KEYFILE" | base64 -d > ${{ env.ATM_CREDENTIALS_FILE }}'
+        shell: bash
+        env:
+          KEYFILE: ${{ secrets.atm_key }}
+
+      - name: Install dependencies
+        run: pip install dbt-bigquery
+
+      - name: Install DBT dependencies
+        run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: DBT compile
+        run: dbt compile --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: Run unit tests
+        run: dbt test --select ${{ inputs.dbt_project_name }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: Authenticate in STM
+        run: gcloud auth activate-service-account --key-file=${{ inputs.stm_credentials_file }}
+
+      - name: Create temporary dataset
+        run: bq mk -d --project_id ${{ inputs.stm_project_id }} --data_location=EU ${{ env.DBT_DATASET }}
+
+      - name: DBT run
+        run: dbt run --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: Generate docs
+        run: dbt docs generate --exclude tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: Delete temporary dataset
+        if: always()
+        run: bq rm -f -r --project_id ${{ inputs.stm_project_id }} -d ${{ env.DBT_DATASET }}
+
+      - name: Generate single HTML docs file
+        run: python generate_single_doc_file.py
+
+      - name: Copy HTML docs to Cloud Storage
+        run: gsutil cp target/single_index.html gs://${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html
+
+      - name: Authenticate in ATM
+        run: gcloud auth activate-service-account --key-file=${{ env.ATM_CREDENTIALS_FILE }}
+
+      - name: Copy ATM catalog from Cloud Storage
+        run: gsutil cp gs://${{ inputs.atm_docs_bucket }}/catalog.json .
+
+      - name: Install json-diff
+        run: npm install json-diff
+
+      - name: Compare catalogs
+        id: catalog_diff
+        # Ignore changes in metadata and schema, since in our PR, all models are materialized in the same schema
+        run: |
+          jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' catalog.json > catalog-modified.json
+          jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' target/catalog.json > target/catalog-modified.json
+          DIFF=$(npx json-diff catalog-modified.json target/catalog-modified.json)
+          echo 'DIFF<<EOF' >> $GITHUB_ENV
+          echo "$DIFF" >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+
+      - name: Post catalog diff to PR
+        uses: thollander/actions-comment-pull-request@v1
+        with:
+          message: |
+            [dbt docs for this PR](https://storage.cloud.google.com/${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html?authuser=0)
+
+            dbt schema changes introduced by this PR (compared to ATM, excluding dataset changes):
+            ```diff
+            ${{ env.DIFF }}
+            ```
+          GITHUB_TOKEN: ${{ github.token }}
