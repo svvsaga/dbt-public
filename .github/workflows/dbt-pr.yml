@@ -97,7 +97,7 @@ jobs:
         run: bq rm -f -r --project_id ${{ inputs.stm_project_id }} -d ${{ env.DBT_DATASET }}
 
       - name: Generate single HTML docs file
-        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.0
+        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.1
         with:
           dbt-path: ${{ inputs.dbt_path }}
 
