@@ -74,7 +74,7 @@ jobs:
           service_account_key: ${{ secrets.service_account_key }}
 
       - name: Generate single HTML docs file
-        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@add-common-dbt-code
+        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.2
         with:
           dbt-path: ${{ inputs.dbt_path }}
 
