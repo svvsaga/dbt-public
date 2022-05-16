@@ -86,9 +86,6 @@ jobs:
       - name: Authenticate in STM
         run: gcloud auth activate-service-account --key-file=${{ inputs.stm_credentials_file }}
 
-      - name: Create temporary dataset
-        run: bq mk -d --project_id ${{ inputs.stm_project_id }} --data_location=EU ${{ env.DBT_DATASET }}
-
       - name: DBT run
         run: dbt run --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
 
