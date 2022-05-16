@@ -100,7 +100,9 @@ jobs:
         run: bq rm -f -r --project_id ${{ inputs.stm_project_id }} -d ${{ env.DBT_DATASET }}
 
       - name: Generate single HTML docs file
-        run: python generate_single_doc_file.py
+        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@add-common-dbt-code
+        with:
+          dbt-path: ${{ inputs.dbt_path }}
 
       - name: Copy HTML docs to Cloud Storage
         run: gsutil cp target/single_index.html gs://${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html

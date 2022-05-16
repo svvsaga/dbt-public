@@ -73,8 +73,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.service_account_key }}
 
-      - name: Generate single doc file
-        run: python generate_single_doc_file.py
+      - name: Generate single HTML docs file
+        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@add-common-dbt-code
+        with:
+          dbt-path: ${{ inputs.dbt_path }}
 
       - name: Copy HTML docs to Cloud Storage
         run: gsutil cp target/single_index.html gs://${{ inputs.docs_bucket }}/index.html
