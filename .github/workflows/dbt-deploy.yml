@@ -1,0 +1,85 @@
+name: Deploy dbt to BigQuery
+
+on:
+  workflow_call:
+    inputs:
+      dbt_path:
+        description: Path to folder with dbt project (without trailing slash)
+        type: string
+        required: true
+      dbt_args:
+        description: Extra arguments to dbt, typically --target and --profile
+        type: string
+        required: true
+      dbt_project_name:
+        description: Name of the dbt project, used to select only models from this project for dbt run/test
+        type: string
+        required: true
+      credentials_file:
+        description: File name for credentials, referred in target profile
+        type: string
+        required: true
+      docs_bucket:
+        description: Name of docs bucket (without gs://)
+        type: string
+        required: true
+    secrets:
+      service_account_key:
+        description: Base64-encoded JSON key for service account
+        required: true
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.dbt_path }}
+    steps:
+      - name: Check out
+        uses: actions/checkout@master
+
+      - name: Install python
+        uses: actions/setup-python@v1
+        with:
+          python-version: "3.7.x"
+
+      - name: Write credentials file
+        run: 'echo "$KEYFILE" | base64 -d > ${{ inputs.credentials_file }}'
+        shell: bash
+        env:
+          KEYFILE: ${{ secrets.service_account_key }}
+
+      - name: Install dependencies
+        run: pip install dbt-bigquery
+
+      - name: Install DBT dependencies
+        run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: Run unit tests
+        run: dbt test -m ${{ inputs.dbt_project_name }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: DBT run
+        run: dbt run -m ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: DBT test
+        run: dbt test -m ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: Generate docs
+        run: dbt docs generate --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: Setup Google Cloud SDK with service account key
+        uses: svvsaga/github-actions-public/setup-gcloud-with-json-key@v8.0.1
+        with:
+          service_account_key: ${{ secrets.service_account_key }}
+
+      - name: Generate single HTML docs file
+        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@add-common-dbt-code
+        with:
+          dbt-path: ${{ inputs.dbt_path }}
+
+      - name: Copy HTML docs to Cloud Storage
+        run: gsutil cp target/single_index.html gs://${{ inputs.docs_bucket }}/index.html
+
+      - name: Copy JSON files to Cloud Storage
+        run: gsutil cp target/*.json gs://${{ inputs.docs_bucket }}/

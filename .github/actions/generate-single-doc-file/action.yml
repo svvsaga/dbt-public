@@ -1,0 +1,13 @@
+name: 'Generate single dbt doc file'
+description: 'Generates single dbt doc file'
+inputs:
+  dbt-path:
+    description: 'Path to root of dbt project'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        cd ${{ inputs.dbt-path }}
+        python ${{ github.action_path }}/generate_single_doc_file.py
+      shell: bash
