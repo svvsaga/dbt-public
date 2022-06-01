@@ -53,16 +53,19 @@ jobs:
       - name: Install dependencies
         run: pip install dbt-bigquery
 
-      - name: Install DBT dependencies
+      - name: Install dbt dependencies
         run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: Run unit tests
         run: dbt test -m ${{ inputs.dbt_project_name }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
 
-      - name: DBT run
+      - name: dbt seed
+        run: dbt seed -m ${{ input.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: dbt run
         run: dbt run -m ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
 
-      - name: DBT test
+      - name: dbt test
         run: dbt test -m ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: Generate docs
