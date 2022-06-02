@@ -74,10 +74,10 @@ jobs:
       - name: Install dependencies
         run: pip install dbt-bigquery
 
-      - name: Install DBT dependencies
+      - name: Install dbt dependencies
         run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
 
-      - name: DBT compile
+      - name: dbt compile
         run: dbt compile --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: Run unit tests
@@ -86,7 +86,10 @@ jobs:
       - name: Authenticate in STM
         run: gcloud auth activate-service-account --key-file=${{ inputs.stm_credentials_file }}
 
-      - name: DBT run
+      - name: dbt seed
+        run: dbt seed --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+
+      - name: dbt run
         run: dbt run --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: Generate docs
