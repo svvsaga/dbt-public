@@ -60,7 +60,7 @@ jobs:
         run: dbt test -m ${{ inputs.dbt_project_name }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: dbt seed
-        run: dbt seed -m ${{ input.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt seed -m ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: dbt run
         run: dbt run -m ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
