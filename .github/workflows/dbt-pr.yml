@@ -59,6 +59,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@master
+        with:
+          fetch-depth: 2
 
       - name: Install python
         uses: actions/setup-python@v1
