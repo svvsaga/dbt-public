@@ -95,9 +95,9 @@ jobs:
       - name: Generate docs
         run: dbt docs generate --exclude tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
 
-      - name: Delete temporary dataset
+      - name: Delete temporary datasets
         if: always()
-        run: bq rm -f -r --project_id ${{ inputs.stm_project_id }} -d ${{ env.DBT_DATASET }}
+        run: bq ls -d --project_id ${{ inputs.stm_project_id }} | grep "${{ env.DBT_DATASET }}" | xargs -n1 bq rm -r -f --project_id ${{ inputs.stm_project_id }} -d
 
       - name: Generate single HTML docs file
         uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.2
