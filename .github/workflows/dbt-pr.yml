@@ -31,6 +31,12 @@ on:
         description: Name of docs bucket in ATM (without gs://)
         type: string
         required: true
+      run_pre_commit_dbt:
+        description: True if pre-commit-dbt should run
+        type: boolean
+        required: false
+        default: false
+
     secrets:
       stm_key:
         description: Base64-encoded JSON key for STM
@@ -72,7 +78,7 @@ jobs:
           KEYFILE: ${{ secrets.atm_key }}
 
       - name: Install dependencies
-        run: pip install dbt-bigquery
+        run: pip install dbt-bigquery pre-commit
 
       - name: Install dbt dependencies
         run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
@@ -98,6 +104,26 @@ jobs:
       - name: Delete temporary datasets
         if: always()
         run: bq ls -d --project_id ${{ inputs.stm_project_id }} | grep "${{ env.DBT_DATASET }}" | xargs -n1 bq rm -r -f --project_id ${{ inputs.stm_project_id }} -d
+
+      - name: Run pre-commit-dbt
+        run: |
+          cat <<EOF > .pre-commit-config-dbt.yaml
+          repos:
+            - repo: https://github.com/offbi/pre-commit-dbt
+              rev: v1.0.0
+              hooks:
+                - id: check-model-has-all-columns
+                  name: Check that all columns in database exist in schema
+                  args: ['--manifest', '${{ inputs.dbt_path }}/target/manifest.json', '--catalog', '${{ inputs.dbt_path }}/target/catalog.json']
+                - id: check-model-columns-have-desc
+                  name: Check all columns have description
+                  args: ['--manifest', '${{ inputs.dbt_path }}/target/manifest.json']
+                - id: check-model-has-description
+                  name: Check all models have description
+                  args: ['--manifest', '${{ inputs.dbt_path }}/target/manifest.json']
+          EOF
+          pre-commit run --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }} --config .pre-commit-config-dbt.yaml
+        shell: bash
 
       - name: Generate single HTML docs file
         uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.2

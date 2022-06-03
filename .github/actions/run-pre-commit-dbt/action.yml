@@ -1,0 +1,33 @@
+name: 'Run pre-commit-dbt'
+description: 'Run pre-commit-dbt'
+inputs:
+  dbt-path:
+    description: 'Path to root of dbt project'
+    required: true
+  from-ref:
+    description: 'Run for files changed after this ref'
+    required: true
+  to-ref:
+    description: 'Run for files changed after this ref'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        cat <<EOF > .pre-commit-config-dbt.yaml
+        repos:
+          - repo: https://github.com/offbi/pre-commit-dbt
+            rev: v1.0.0
+            hooks:
+              - id: check-model-has-all-columns
+                name: Check that all columns in database exist in schema
+                args: ['--manifest', '${{ inputs.dbt-path }}/target/manifest.json', '--catalog', '${{ inputs.dbt-path }}/target/catalog.json']
+              - id: check-model-columns-have-desc
+                name: Check all columns have description
+                args: ['--manifest', '${{ inputs.dbt-path }}/target/manifest.json']
+              - id: check-model-has-description
+                name: Check all models have description
+                args: ['--manifest', '${{ inputs.dbt-path }}/target/manifest.json']
+        EOF
+        pre-commit run --from-ref ${{ inputs.from-ref }} --to-ref ${{ inputs.to-ref }} --config .pre-commit-config-dbt.yaml
+      shell: bash
