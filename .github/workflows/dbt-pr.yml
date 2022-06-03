@@ -138,3 +138,4 @@ jobs:
             ${{ env.DIFF }}
             ```
           GITHUB_TOKEN: ${{ github.token }}
+          comment_includes: 'dbt docs for this PR'
