@@ -1,7 +1,7 @@
 {% docs get_custom_schema_for_env %}
 Macro that lets you use the custom schema name for a model as dataset name when materializing.
-To use it, define this macro in your project:
 
+To use it, define this macro in your project:
 {% raw %}
 ```
     {% macro generate_schema_name(custom_schema_name, node) -%}
@@ -40,4 +40,17 @@ When developing models, you can use `generate_model_yaml` to generate a model sc
 This will generate model schema for a model called `buffered_hendelser`:
 
 `dbt run-operation saga_dbt_public.generate_model_yaml --args '{"model_name": "buffered_hendelser"}'`
+{% enddocs %}
+
+
+{% docs table_or_view %}
+Use this macro to materialize model as table only for certain targets.
+This can be useful if you want to run `dbt run` to test that your SQL is valid, without creating a table which could incur a large cost.
+
+Add this to your model configuration to materialize as table if target is STM, ATM or PROD:
+{% raw %}
+```
+    {{ config(materialized=saga_dbt_public.table_or_view(['STM', 'ATM', 'PROD'])) }}
+```
+{% endraw %}
 {% enddocs %}

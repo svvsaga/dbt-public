@@ -9,3 +9,6 @@ macros:
 
   - name: generate_model_yaml
     description: "{{ doc('generate_model_yaml') }}"
+
+  - name: table_or_view
+    description: "{{ doc('table_or_view') }}"
