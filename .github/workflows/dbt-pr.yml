@@ -110,13 +110,17 @@ jobs:
       - name: Authenticate in ATM
         run: gcloud auth activate-service-account --key-file=${{ env.ATM_CREDENTIALS_FILE }}
 
-      - name: Copy ATM catalog from Cloud Storage
+      - id: copy-catalog
+        name: Copy ATM catalog from Cloud Storage
         run: gsutil cp gs://${{ inputs.atm_docs_bucket }}/catalog.json .
+        continue-on-error: true
 
       - name: Install json-diff
+        if: steps.copy-catalog.outcome == 'success'
         run: npm install json-diff
 
       - name: Compare catalogs
+        if: steps.copy-catalog.outcome == 'success'
         id: catalog_diff
         # Ignore changes in metadata and schema, since in our PR, all models are materialized in the same schema
         run: |
@@ -131,6 +135,7 @@ jobs:
           echo 'EOF' >> $GITHUB_ENV
 
       - name: Post catalog diff to PR
+        if: steps.copy-catalog.outcome == 'success'
         uses: thollander/actions-comment-pull-request@v1
         with:
           message: |
