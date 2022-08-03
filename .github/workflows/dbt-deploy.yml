@@ -11,10 +11,6 @@ on:
         description: Extra arguments to dbt, typically --target and --profile
         type: string
         required: true
-      dbt_project_name:
-        description: Name of the dbt project, used to select only models from this project for dbt run/test
-        type: string
-        required: true
       credentials_file:
         description: File name for credentials, referred in target profile
         type: string
@@ -24,7 +20,7 @@ on:
         type: string
         required: true
       dbt_model_filter:
-        description: 'Filter to be used in select flag to ensure that only models that passes the filter is ran, format: filter1,filter2,etc.'
+        description: 'Filter ensure that only models that passes the filter is ran, format: filter1,filter2,etc. Filter1 is usually the project name'
         type: string
         required: false
         default: ''
@@ -32,9 +28,6 @@ on:
       service_account_key:
         description: Base64-encoded JSON key for service account
         required: true
-
-env:
-  SELECT_FILTER: ${{ inputs.dbt_model_filter == '' && inputs.dbt_project_name || format('{0},{1}', inputs.dbt_project_name, inputs.dbt_model_filter) }}
 
 jobs:
   build:
@@ -65,16 +58,16 @@ jobs:
         run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: Run unit tests
-        run: dbt test -m ${{ env.SELECT_FILTER }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt test -m ${{ inputs.dbt_model_filter }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: dbt seed
-        run: dbt seed -m ${{ env.SELECT_FILTER }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt seed -m ${{ inputs.dbt_model_filter }} --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: dbt run
-        run: dbt run -m ${{ env.SELECT_FILTER }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt run -m ${{ inputs.dbt_model_filter }} --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: dbt test
-        run: dbt test -m ${{ env.SELECT_FILTER }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt test -m ${{ inputs.dbt_model_filter }} --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: Generate docs
         run: dbt docs generate --profiles-dir . ${{ inputs.dbt_args }}
