@@ -1,7 +1,7 @@
 {% macro fetch_existing_descriptions(current_model) %}
   {% set description_dict = {} %}
   {% set current_model_dict = {} %}
-  {% for node in graph.nodes.values() | selectattr("resource_type", "equalto", "model") %}
+  {% for node in dict(graph.nodes, **graph.sources).values() %}
     {% for col_dict in node.columns.values() %}
       {% if node.name == current_model %}
         -- Add current model description to separate dict to overwrite with later
