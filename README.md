@@ -1,5 +1,15 @@
 # dbt-public
 
+For å komme i gang med dbt, installer `dbt` med
+```
+brew tap dbt-labs/dbt
+brew install dbt-bigquery
+```
+Hvis dette ikke virker, kan du prøve `pip install dbt-bigquery`.
+
+For å sette opp et skall til et `dbt`-prosjekt, kjør `dbt init` i din prosjektmappe.
+
+
 Dette repoet inneholder nyttig kode for å jobbe med dbt.
 Vi kan dele koden i to typer:
 
