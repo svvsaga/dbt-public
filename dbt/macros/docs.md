@@ -40,6 +40,9 @@ When developing models, you can use `generate_model_yaml` to generate a model sc
 This will generate model schema for a model called `buffered_hendelser`:
 
 `dbt run-operation saga_dbt_public.generate_model_yaml --args '{"model_name": "buffered_hendelser"}'`
+
+If you want to generate doc tags instead of inlining descriptions, useful if the same column description is used in multiple models:
+`dbt run-operation saga_dbt_public.generate_model_yaml --args '{"model_name": "buffered_hendelser", "docs": True}'`
 {% enddocs %}
 
 

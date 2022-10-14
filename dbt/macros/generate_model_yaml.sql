@@ -1,4 +1,4 @@
-{% macro generate_model_yaml(model_name) %}
+{% macro generate_model_yaml(model_name, docs=False) %}
   {# Inspired by https://stackoverflow.com/questions/67718476/using-one-yaml-definition-for-the-same-column-as-it-moves-through-models #}
   {% set model_yaml=[] %}
   {% set existing_descriptions = saga_dbt_public.fetch_existing_descriptions(model_name) %}
@@ -19,7 +19,11 @@
     {%- set column = column.name | lower -%}
     {%- set col_description = existing_descriptions.get(column, '') %}
     {% do model_yaml.append('      - name: ' ~ column ) %}
-    {% do model_yaml.append('        description: "' ~ col_description ~ '"') %}
+    {% if docs %}
+      {% do model_yaml.append('        description: "{{ doc(\'' ~ column ~ '\') }}"') %}
+    {% else %}
+      {% do model_yaml.append('        description: "' ~ col_description ~ '"') %}
+    {% endif %}
     {% do model_yaml.append('') %}
   {% endfor %}
   {% if execute %}
