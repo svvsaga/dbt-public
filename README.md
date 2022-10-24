@@ -1,16 +1,71 @@
-# dbt-public
 
-For å komme i gang med dbt, installer `dbt` med
+
+# dbt-public
+Dette repoet inneholder nyttig kode og dokumentasjon for å jobbe med dbt på Saga og med Github actions.
+
+# Kom igang med dbt-utvikling
+Den enkleste måten å sette opp et utviklingsmiljø for dbt på, er med Google Cloud Shell.
+Google Cloud Shell finner du [her](https://console.cloud.google.com/home/dashboard?cloudshell=true).
+Dette vil åpne et terminalvindu nederst på siden.
+
+![Cloud Shell](readme-files/cloud-shell.png)
+
+## Førstegangsoppsett
+For å sette opp miljøet første gang, må du gjøre følgende kommandoer:
+### Installere github-klient (gh)
+Dette installerer en github-klient og logger deg inn på github.
+
+```bash
+curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+sudo apt update
+sudo apt install gh
+gh auth login
 ```
-brew tap dbt-labs/dbt
-brew install dbt-bigquery
+Velg alle standard-alternativene som `gh auth login` foreslår (Github.com, HTTPS, Login with web browser).
+
+### Konfigurere git
+Sett opp git til å bruke ditt navn og e-postadresse.
+
+```bash
+git config --global user.email you@example.com
+git config --global user.name YourName
 ```
-Hvis dette ikke virker, kan du prøve `pip install dbt-bigquery`.
+
+### Klone repo
+Nå kan du klone ditt Github-repo:
+
+```bash
+git clone <repo-URL>
+```
+
+## Utvikling
+I Cloud Shell kan du trykke Open Editor for å åpne en IDE for å utvikle.
+
+![Open Editor](readme-files/open-editor.png)
+
+Velg `File -> Open workspace` for å åpne repoet ditt som et workspace.
+
+* Lag en ny branch/gren ved å `Ctrl/Cmd + Shift + P`, velg `Git checkout` og skriv deretter navnet på grenen, f.eks. `add-tunnel-view`.
+* Gjør de endringene du ønsker å gjøre, sjekk deretter inn i `Source control`-taben.
+* Gjør `Git push` for å pushe til Github.
+
+![Git](readme-files/git-push.png)
+
+## Kjøre dbt
+Det er ikke nødvendig å kunne kjøre `dbt` for å kunne utvikle nye dbt-modeller.
+Hvis du derimot ønsker å teste nye modeller lokalt, kan du installere `dbt` i ditt Cloud Shell.
+
+Først må du oppgradere setuptools, og deretter installere `dbt-bigquery`:
+```bash
+pip3 install --upgrade setuptools
+pip3 install dbt-bigquery
+```
+Se [dbt-readme](dbt/README.md) for mer informasjon.
 
 For å sette opp et skall til et `dbt`-prosjekt, kjør `dbt init` i din prosjektmappe.
 
-
-Dette repoet inneholder nyttig kode for å jobbe med dbt.
+# Nyttig kode i dbt-public
 Vi kan dele koden i to typer:
 
 ## dbt-makroer
@@ -67,8 +122,7 @@ der `<target>` typisk er `STM`, `ATM` eller `PROD`.
 5. Sammenligner skjema med skjema i ATM og poster som kommentar på PR
 
 Siden denne kjører `dbt run`, bør man være oppmerksom på kostnad dersom det lages veldig mange tabeller med mange bytes.
-Man kan unngå at disse lages som tabeller dersom man lager en makro som lager tabell
-
+Man kan unngå at disse lages som tabeller dersom man bruker makroen `table_or_view`, se [dbt-readme](dbt/README.md).
 
 Brukes slik:
 ```yaml
@@ -90,7 +144,7 @@ jobs:
 
 Antar at du har en `profiles.yml`-fil i dbt-prosjektmappen som inneholder profiler på denne formen:
 ```yaml
-veidatahuset-github:
+<profile name>:
   outputs:
     <pr target name>:
       type: bigquery
