@@ -126,7 +126,7 @@ jobs:
         run: |
           jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' catalog.json > catalog-modified.json
           jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' target/catalog.json > target/catalog-modified.json
-          DIFF=$(npx json-diff catalog-modified.json target/catalog-modified.json)
+          DIFF=$(npx json-diff catalog-modified.json target/catalog-modified.json | head -c 61000)
           if [[ ${#DIFF} -gt 60000 ]] ; then
               DIFF="${DIFF::60000}"$'\n...\nDiff too long to be shown in full'
           fi
