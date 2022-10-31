@@ -122,7 +122,7 @@ jobs:
       - name: Compare catalogs
         if: steps.copy-catalog.outcome == 'success'
         id: catalog_diff
-        # Ignore changes in metadata and schema, since in our PR, all models are materialized in the same schema
+        # Ignore changes in metadata and schema, since in our PR, all models are  materialized in the same schema
         run: |
           jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' catalog.json > catalog-modified.json
           jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' target/catalog.json > target/catalog-modified.json
