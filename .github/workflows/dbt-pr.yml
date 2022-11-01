@@ -1,4 +1,4 @@
-name: Check dbt SQL formatting with SQLfluff
+name: Run dbt in test environment, run unit tests, check SQL formatting
 
 on:
   workflow_call:
@@ -15,10 +15,6 @@ on:
         description: Name of the dbt project, used to select only models from this project for dbt run/test
         type: string
         required: true
-      stm_credentials_file:
-        description: File name to use for STM credentials, referred in target profile
-        type: string
-        required: true
       stm_project_id:
         description: ID of STM project on Google cloud
         type: string
@@ -31,16 +27,22 @@ on:
         description: Name of docs bucket in ATM (without gs://)
         type: string
         required: true
-    secrets:
-      stm_key:
-        description: Base64-encoded JSON key for STM
+      projects_config_path:
+        description: Path to folder with projects.config.json
+        type: string
         required: true
-      atm_key:
-        description: Base64-encoded JSON key for ATM
-        required: true
+      service_account:
+        description: Name of service account to run dbt with (default project-service-account)
+        type: string
+        required: false
+        default: project-service-account
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
 
 env:
-  ATM_CREDENTIALS_FILE: ./creds_ATM.json
   DBT_DATASET: pr_${{ github.event.pull_request.number }}_${{ github.run_number }}_${{ github.run_attempt }}
 
 jobs:
@@ -59,32 +61,24 @@ jobs:
         with:
           python-version: "3.7.x"
 
-      - name: Write STM credentials file
-        run: 'echo "$KEYFILE" | base64 -d > ${{ inputs.stm_credentials_file }}'
-        shell: bash
-        env:
-          KEYFILE: ${{ secrets.stm_key }}
-
-      - name: Write ATM credentials file
-        run: 'echo "$KEYFILE" | base64 -d > ${{ env.ATM_CREDENTIALS_FILE }}'
-        shell: bash
-        env:
-          KEYFILE: ${{ secrets.atm_key }}
-
       - name: Install dependencies
         run: pip install dbt-bigquery
 
       - name: Install dbt dependencies
         run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
 
+      - name: Setup gcloud for STM
+        uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
+        with:
+          environment: STM
+          app_root: ${{ inputs.projects_config_path }}
+          service_account: ${{ inputs.service_account }}
+
       - name: dbt compile
         run: dbt compile --profiles-dir . ${{ inputs.dbt_args }}
 
       - name: Run unit tests
         run: dbt test --select ${{ inputs.dbt_project_name }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
-
-      - name: Authenticate in STM
-        run: gcloud auth activate-service-account --key-file=${{ inputs.stm_credentials_file }}
 
       - name: dbt seed
         run: dbt seed --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
@@ -107,8 +101,12 @@ jobs:
       - name: Copy HTML docs to Cloud Storage
         run: gsutil cp target/single_index.html gs://${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html
 
-      - name: Authenticate in ATM
-        run: gcloud auth activate-service-account --key-file=${{ env.ATM_CREDENTIALS_FILE }}
+      - name: Setup gcloud for ATM
+        uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
+        with:
+          environment: ATM
+          app_root: ${{ inputs.projects_config_path }}
+          service_account: ${{ inputs.service_account }}
 
       - id: copy-catalog
         name: Copy ATM catalog from Cloud Storage
