@@ -34,6 +34,10 @@ on:
         required: false
         default: project-service-account
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   build:
     name: Build
