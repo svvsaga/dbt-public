@@ -75,6 +75,19 @@ Se [dbt-readme](dbt/README.md) for dokumentasjon om disse.
 
 ## Workflows for Github actions
 Disse workflowene kan brukes til å teste og deploye dbt-kode.
+To av disse krever at repoet ditt har en `projects.config.json`, på denne formen: 
+```yaml
+{
+  "project_numbers": {
+    "PROD": "<prod project number>",
+    "STM": "<stm project number>",
+    "ATM": "<atm project number>"
+  },
+  "PROD": "<prod project name>",
+  "STM": "<stm project name>",
+  "ATM": "<atm project name>"
+}
+```
 
 ### dbt-deploy: Deploy dbt til GCP-prosjekt
 `dbt-deploy` gjør følgende:
