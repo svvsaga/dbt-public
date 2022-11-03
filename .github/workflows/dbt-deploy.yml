@@ -11,10 +11,6 @@ on:
         description: Extra arguments to dbt, typically --target and --profile
         type: string
         required: true
-      credentials_file:
-        description: File name for credentials, referred in target profile
-        type: string
-        required: true
       docs_bucket:
         description: Name of docs bucket (without gs://)
         type: string
@@ -24,10 +20,23 @@ on:
         type: string
         required: false
         default: ''
-    secrets:
-      service_account_key:
-        description: Base64-encoded JSON key for service account
+      projects_config_path:
+        description: Path to folder with projects.config.json
+        type: string
         required: true
+      environment:
+        description: Name of environment (STM, ATM or PROD)
+        type: string
+        required: true
+      service_account:
+        description: Name of service account to run dbt with (default project-service-account)
+        type: string
+        required: false
+        default: project-service-account
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build:
@@ -45,11 +54,12 @@ jobs:
         with:
           python-version: "3.7.x"
 
-      - name: Write credentials file
-        run: 'echo "$KEYFILE" | base64 -d > ${{ inputs.credentials_file }}'
-        shell: bash
-        env:
-          KEYFILE: ${{ secrets.service_account_key }}
+      - name: Setup gcloud
+        uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
+        with:
+          environment: ${{ inputs.environment }}
+          app_root: ${{ inputs.projects_config_path }}
+          service_account: ${{ inputs.service_account }}
 
       - name: Install dependencies
         run: pip install dbt-bigquery
@@ -71,11 +81,6 @@ jobs:
 
       - name: Generate docs
         run: dbt docs generate --profiles-dir . ${{ inputs.dbt_args }}
-
-      - name: Setup Google Cloud SDK with service account key
-        uses: svvsaga/github-actions-public/setup-gcloud-with-json-key@v8.0.1
-        with:
-          service_account_key: ${{ secrets.service_account_key }}
 
       - name: Generate single HTML docs file
         uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.2

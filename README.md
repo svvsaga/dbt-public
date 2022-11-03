@@ -75,6 +75,19 @@ Se [dbt-readme](dbt/README.md) for dokumentasjon om disse.
 
 ## Workflows for Github actions
 Disse workflowene kan brukes til å teste og deploye dbt-kode.
+To av disse krever at repoet ditt har en `projects.config.json`, på denne formen: 
+```yaml
+{
+  "project_numbers": {
+    "PROD": "<prod project number>",
+    "STM": "<stm project number>",
+    "ATM": "<atm project number>"
+  },
+  "PROD": "<prod project name>",
+  "STM": "<stm project name>",
+  "ATM": "<atm project name>"
+}
+```
 
 ### dbt-deploy: Deploy dbt til GCP-prosjekt
 `dbt-deploy` gjør følgende:
@@ -89,15 +102,15 @@ Brukes slik:
 jobs:
   deploy_stm:
     name: Deploy dbt to STM
-    uses: svvsaga/dbt-public/.github/workflows/dbt-deploy.yml@v2.1.2
+    uses: svvsaga/dbt-public/.github/workflows/dbt-deploy.yml@<version>
     with:
       dbt_path: <folder with your dbt project>
       dbt_args: --profile <profile name> --target <target>
       dbt_project_name: <your dbt project name>
-      credentials_file: <file to write credentials to>
       docs_bucket: <name of GCS bucket>
-    secrets:
-      service_account_key: <base64-encoded service account key>
+      projects_config_path: <path to folder with projects.config.json>
+      service_account: <name of service account to use, default is project-service-account>
+      environment: STM
 ```
 
 Antar at du har en `profiles.yml`-fil i dbt-prosjektmappen som inneholder profiler på denne formen:
@@ -106,8 +119,7 @@ Antar at du har en `profiles.yml`-fil i dbt-prosjektmappen som inneholder profil
   outputs:
     <target>:
       type: bigquery
-      method: service-account
-      keyfile: <file to write credentials to>
+      method: oauth
       project: <GCP project ID>
       ...
 ````
@@ -128,18 +140,16 @@ Brukes slik:
 ```yaml
 jobs:
   dbt-run-test:
-    uses: svvsaga/dbt-public/.github/workflows/dbt-pr.yml@v2.1.2
+    uses: svvsaga/dbt-public/.github/workflows/dbt-pr.yml@<version>
     with:
       dbt_path: <folder with your dbt project>
       dbt_args: --profile <profile name> --target <pr target name>
       dbt_project_name: <dbt project name>
-      stm_credentials_file: <file to write credentials to>
       stm_project_id: <stm project ID>
       stm_docs_bucket: <stm docs bucket>
       atm_docs_bucket: <atm docs bucket>
-    secrets:
-      stm_key: <base64-encoded service account key for STM>
-      atm_key: <base64-encoded service account key for ATM>
+      projects_config_path: <path to folder with projects.config.json>
+      service_account: <name of service account to use, default is project-service-account>
 ```
 
 Antar at du har en `profiles.yml`-fil i dbt-prosjektmappen som inneholder profiler på denne formen:
@@ -148,8 +158,7 @@ Antar at du har en `profiles.yml`-fil i dbt-prosjektmappen som inneholder profil
   outputs:
     <pr target name>:
       type: bigquery
-      method: service-account
-      keyfile: <file to write credentials to>
+      method: oauth
       project: <stm project ID>
       dataset: "{{ env_var('DBT_DATASET') }}"
 ```
@@ -168,7 +177,7 @@ Brukes slik:
 ```yaml
 jobs:
   check-sql-formatting:
-    uses: svvsaga/dbt-public/.github/workflows/dbt-sqlfluff-lint.yml@v2.1.2
+    uses: svvsaga/dbt-public/.github/workflows/dbt-sqlfluff-lint.yml@<version>
     with:
       dbt_path: <folder with dbt project>
 ```
