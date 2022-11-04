@@ -122,8 +122,8 @@ jobs:
         id: catalog_diff
         # Ignore changes in metadata and schema, since in our PR, all models are  materialized in the same schema
         run: |
-          jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' catalog.json > catalog-modified.json
-          jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database)' target/catalog.json > target/catalog-modified.json
+          jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database) | del(.nodes[].columns[].index)' catalog.json > catalog-modified.json
+          jq 'del(.metadata) | del(.nodes[].metadata.schema) | del(.nodes[].metadata.database) | del(.nodes[].stats) | del(.nodes[].metadata.type) | del(.sources[].stats) | del(.sources[].metadata.database) | del(.nodes[].columns[].index)' target/catalog.json > target/catalog-modified.json
           DIFF=$(npx json-diff catalog-modified.json target/catalog-modified.json | head -c 61000)
           if [[ ${#DIFF} -gt 60000 ]] ; then
               DIFF="${DIFF::60000}"$'\n...\nDiff too long to be shown in full'
