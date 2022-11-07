@@ -28,7 +28,7 @@
   {% endfor %}
   {% if execute %}
     {% set joined = model_yaml | join ('\n') %}
-    {{ log(joined, info=True) }}
+    {{ print(joined) }}
     {% do return(joined) %}
   {% endif %}
 {% endmacro %}
