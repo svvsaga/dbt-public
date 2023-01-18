@@ -138,7 +138,7 @@ jobs:
     steps:
       - name: Post catalog diff to PR
         if: steps.copy-catalog.outcome == 'success'
-        uses: thollander/actions-comment-pull-request@632cf9c
+        uses: thollander/actions-comment-pull-request@632cf9ce90574d125be56b5f3405cda41a84e2fd
         with:
           message: |
             [dbt docs for this PR](https://storage.cloud.google.com/${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html?authuser=0)

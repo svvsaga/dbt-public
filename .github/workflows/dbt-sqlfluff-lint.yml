@@ -26,7 +26,7 @@ jobs:
 
       - name: Get changed files
         id: get_file_changes
-        uses: tj-actions/changed-files@487675b
+        uses: tj-actions/changed-files@487675b843e203b5c9a92a07f1ed763d046d7283
         with:
           output: ' '
 
@@ -58,7 +58,7 @@ jobs:
           sed -i -e 's|"file": "|"file": "${{ inputs.dbt_path }}/|g' annotations.json
 
       - name: Annotate
-        uses: yuzutech/annotations-action@3aa369f
+        uses: yuzutech/annotations-action@3aa369f1f03cc794a39fe41608dfa004654974d0
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           title: "SQLFluff Lint"
