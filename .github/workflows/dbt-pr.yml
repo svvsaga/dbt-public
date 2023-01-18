@@ -64,7 +64,7 @@ jobs:
         run: pip install dbt-bigquery
 
       - name: Install dbt dependencies
-        run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt deps ${{ inputs.dbt_args }}
 
       - name: Setup gcloud for STM
         uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
@@ -74,19 +74,19 @@ jobs:
           service_account: ${{ inputs.service_account }}
 
       - name: dbt compile
-        run: dbt compile --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt compile ${{ inputs.dbt_args }}
 
       - name: Run unit tests
-        run: dbt test --select ${{ inputs.dbt_project_name }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt test --select ${{ inputs.dbt_project_name }},tag:unit-test ${{ inputs.dbt_args }}
 
       - name: dbt seed
-        run: dbt seed --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt seed --select ${{ inputs.dbt_project_name }} ${{ inputs.dbt_args }}
 
       - name: dbt run
-        run: dbt run --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt run --select ${{ inputs.dbt_project_name }} ${{ inputs.dbt_args }}
 
       - name: Generate docs
-        run: dbt docs generate --exclude tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt docs generate --exclude tag:unit-test ${{ inputs.dbt_args }}
 
       - name: Delete temporary datasets
         if: always()
