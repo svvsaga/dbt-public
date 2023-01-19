@@ -127,7 +127,9 @@ jobs:
           if [[ ${#DIFF} -gt 60000 ]] ; then
               DIFF="${DIFF::60000}"$'\n...\nDiff too long to be shown in full'
           fi
-          echo "diff=$DIFF" >> $GITHUB_OUTPUT
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
   post-to-pr:
     name: Run dbt unit tests, generate docs
