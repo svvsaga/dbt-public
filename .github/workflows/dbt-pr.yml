@@ -48,6 +48,8 @@ jobs:
       contents: read
       pull-requests: write
       id-token: write
+    outputs:
+      diff: ${{ steps.catalog_diff.outputs.diff }}
     defaults:
       run:
         working-directory: ${{ inputs.dbt_path }}
