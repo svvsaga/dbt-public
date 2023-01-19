@@ -65,22 +65,22 @@ jobs:
         run: pip install dbt-bigquery
 
       - name: Install dbt dependencies
-        run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt deps ${{ inputs.dbt_args }}
 
       - name: Run unit tests
-        run: dbt test -m ${{ inputs.dbt_model_filter }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt test -m ${{ inputs.dbt_model_filter }},tag:unit-test ${{ inputs.dbt_args }}
 
       - name: dbt seed
-        run: dbt seed -m ${{ inputs.dbt_model_filter }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt seed -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }}
 
       - name: dbt run
-        run: dbt run -m ${{ inputs.dbt_model_filter }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt run -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }}
 
       - name: dbt test
-        run: dbt test -m ${{ inputs.dbt_model_filter }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt test -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }}
 
       - name: Generate docs
-        run: dbt docs generate --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt docs generate ${{ inputs.dbt_args }}
 
       - name: Generate single HTML docs file
         uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.2

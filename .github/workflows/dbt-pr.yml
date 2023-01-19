@@ -37,11 +37,6 @@ on:
         required: false
         default: project-service-account
 
-permissions:
-  contents: read
-  pull-requests: write
-  id-token: write
-
 env:
   DBT_DATASET: pr_${{ github.event.pull_request.number }}_${{ github.run_number }}_${{ github.run_attempt }}
 
@@ -49,6 +44,12 @@ jobs:
   test:
     name: Run dbt unit tests, generate docs
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    outputs:
+      diff: ${{ steps.catalog_diff.outputs.diff }}
     defaults:
       run:
         working-directory: ${{ inputs.dbt_path }}
@@ -65,7 +66,7 @@ jobs:
         run: pip install dbt-bigquery
 
       - name: Install dbt dependencies
-        run: dbt deps --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt deps ${{ inputs.dbt_args }}
 
       - name: Setup gcloud for STM
         uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
@@ -75,19 +76,19 @@ jobs:
           service_account: ${{ inputs.service_account }}
 
       - name: dbt compile
-        run: dbt compile --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt compile ${{ inputs.dbt_args }}
 
       - name: Run unit tests
-        run: dbt test --select ${{ inputs.dbt_project_name }},tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt test --select ${{ inputs.dbt_project_name }},tag:unit-test ${{ inputs.dbt_args }}
 
       - name: dbt seed
-        run: dbt seed --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt seed --select ${{ inputs.dbt_project_name }} ${{ inputs.dbt_args }}
 
       - name: dbt run
-        run: dbt run --select ${{ inputs.dbt_project_name }} --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt run --select ${{ inputs.dbt_project_name }} ${{ inputs.dbt_args }}
 
       - name: Generate docs
-        run: dbt docs generate --exclude tag:unit-test --profiles-dir . ${{ inputs.dbt_args }}
+        run: dbt docs generate --exclude tag:unit-test ${{ inputs.dbt_args }}
 
       - name: Delete temporary datasets
         if: always()
@@ -128,20 +129,26 @@ jobs:
           if [[ ${#DIFF} -gt 60000 ]] ; then
               DIFF="${DIFF::60000}"$'\n...\nDiff too long to be shown in full'
           fi
-          echo 'DIFF<<EOF' >> $GITHUB_ENV
-          echo "$DIFF" >> $GITHUB_ENV
-          echo 'EOF' >> $GITHUB_ENV
+          echo "diff<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
 
+  post-to-pr:
+    name: Post catalog diff to PR
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      pull-requests: write
+    steps:
       - name: Post catalog diff to PR
-        if: steps.copy-catalog.outcome == 'success'
-        uses: thollander/actions-comment-pull-request@v1
+        uses: thollander/actions-comment-pull-request@632cf9ce90574d125be56b5f3405cda41a84e2fd
         with:
           message: |
             [dbt docs for this PR](https://storage.cloud.google.com/${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html?authuser=0)
 
             dbt schema changes introduced by this PR (compared to ATM, excluding dataset changes):
             ```diff
-            ${{ env.DIFF }}
+            ${{ needs.test.outputs.diff }}
             ```
           GITHUB_TOKEN: ${{ github.token }}
           comment_includes: 'dbt docs for this PR'
