@@ -61,6 +61,12 @@ jobs:
           app_root: ${{ inputs.projects_config_path }}
           service_account: ${{ inputs.service_account }}
 
+      - name: Copy old target files from Cloud Storage
+        # In case we want to use previous state to determine which models to run
+        run: |
+          mkdir old-target
+          gsutil cp gs://${{ inputs.docs_bucket }}/*.json old-target/
+
       - name: Install dependencies
         run: pip install dbt-bigquery
 
