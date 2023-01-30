@@ -50,7 +50,7 @@ jobs:
         uses: actions/checkout@master
 
       - name: Install python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: "3.7.x"
 
@@ -61,11 +61,17 @@ jobs:
           app_root: ${{ inputs.projects_config_path }}
           service_account: ${{ inputs.service_account }}
 
+      - name: Copy old target files from Cloud Storage
+        # In case we want to use previous state to determine which models to run
+        run: |
+          mkdir old-target
+          gsutil cp gs://${{ inputs.docs_bucket }}/*.json old-target/
+
       - name: Install dependencies
         run: pip install dbt-bigquery
 
       - name: Install dbt dependencies
-        run: dbt deps ${{ inputs.dbt_args }}
+        run: dbt deps
 
       - name: Run unit tests
         run: dbt test -m ${{ inputs.dbt_model_filter }},tag:unit-test ${{ inputs.dbt_args }}
