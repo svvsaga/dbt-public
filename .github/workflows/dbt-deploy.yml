@@ -71,7 +71,7 @@ jobs:
         run: pip install dbt-bigquery
 
       - name: Install dbt dependencies
-        run: dbt deps ${{ inputs.dbt_args }}
+        run: dbt deps
 
       - name: Run unit tests
         run: dbt test -m ${{ inputs.dbt_model_filter }},tag:unit-test ${{ inputs.dbt_args }}
