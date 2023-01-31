@@ -68,7 +68,7 @@ jobs:
           gsutil cp gs://${{ inputs.docs_bucket }}/*.json old-target/
 
       - name: Install dependencies
-        run: pip install dbt-bigquery==1.3
+        run: pip install dbt-bigquery==1.4
 
       - name: Install dbt dependencies
         run: dbt deps
