@@ -55,7 +55,7 @@ jobs:
           python-version: "3.7.x"
 
       - name: Setup gcloud
-        uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
+        uses: svvsaga/github-actions-public/setup-gcloud@v20.2.1
         with:
           environment: ${{ inputs.environment }}
           app_root: ${{ inputs.projects_config_path }}

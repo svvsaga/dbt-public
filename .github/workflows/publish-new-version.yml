@@ -6,4 +6,4 @@ on:
 
 jobs:
   publish-new-version:
-    uses: svvsaga/github-actions-public/.github/workflows/bump-semantic-version.yml@v3.8.2
+    uses: svvsaga/github-actions-public/.github/workflows/bump-semantic-version.yml@v20.2.1

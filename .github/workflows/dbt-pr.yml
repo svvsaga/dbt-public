@@ -69,7 +69,7 @@ jobs:
         run: dbt deps ${{ inputs.dbt_args }}
 
       - name: Setup gcloud for STM
-        uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
+        uses: svvsaga/github-actions-public/setup-gcloud@v20.2.1
         with:
           environment: STM
           app_root: ${{ inputs.projects_config_path }}
@@ -103,7 +103,7 @@ jobs:
         run: gsutil cp target/single_index.html gs://${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html
 
       - name: Setup gcloud for ATM
-        uses: svvsaga/github-actions-public/setup-gcloud@v17.0.2
+        uses: svvsaga/github-actions-public/setup-gcloud@v20.2.1
         with:
           environment: ATM
           app_root: ${{ inputs.projects_config_path }}
