@@ -16,10 +16,10 @@ on:
         type: string
         required: true
       dbt_model_filter:
-        description: 'Filter ensure that only models that passes the filter is ran, format: filter1,filter2,etc. Filter1 is usually the project name'
+        description: "Filter ensure that only models that passes the filter is ran, format: filter1,filter2,etc. Filter1 is usually the project name"
         type: string
         required: false
-        default: ''
+        default: ""
       projects_config_path:
         description: Path to folder with projects.config.json
         type: string
@@ -33,6 +33,11 @@ on:
         type: string
         required: false
         default: project-service-account
+      full_refresh:
+        description: Should use argument --full-refresh during dbt run command
+        type: boolean
+        required: false
+        default: false
 
 permissions:
   contents: read
@@ -80,7 +85,7 @@ jobs:
         run: dbt seed -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }}
 
       - name: dbt run
-        run: dbt run -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }}
+        run: dbt run -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }} ${{ inputs.full_refresh && '--full-refresh' || '' }}
 
       - name: dbt test
         run: dbt test -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }}
