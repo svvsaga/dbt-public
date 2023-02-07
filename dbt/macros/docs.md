@@ -20,7 +20,7 @@ Add this hook in your dbt_project.yml:
 {% raw %}
 ```
     on-run-end: 
-      - {{ saga_dbt_public.grant_access_for_all_authorized_views(results) }}
+      - "{{ saga_dbt_public.grant_access_for_all_authorized_views(results) }}"
 ```
 {% endraw %}
 
