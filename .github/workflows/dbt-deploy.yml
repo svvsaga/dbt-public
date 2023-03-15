@@ -79,7 +79,7 @@ jobs:
         run: dbt deps
 
       - name: Run unit tests
-        run: dbt test -m ${{ inputs.dbt_model_filter }},tag:unit-test ${{ inputs.dbt_args }}
+        run: dbt test -m ${{ inputs.projects_config_path }},tag:unit-test ${{ inputs.dbt_args }}
 
       - name: dbt seed
         run: dbt seed -m ${{ inputs.dbt_model_filter }} ${{ inputs.dbt_args }}
