@@ -55,10 +55,10 @@ jobs:
         working-directory: ${{ inputs.dbt_path }}
     steps:
       - name: Check out
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
       - name: Install python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.7.x"
 
@@ -69,7 +69,7 @@ jobs:
         run: dbt deps ${{ inputs.dbt_args }}
 
       - name: Setup gcloud for STM
-        uses: svvsaga/github-actions-public/setup-gcloud@v22.3.4
+        uses: svvsaga/github-actions-public/setup-gcloud@v24.0.0
         with:
           environment: STM
           app_root: ${{ inputs.projects_config_path }}
@@ -95,7 +95,7 @@ jobs:
         run: bq ls -d --project_id ${{ inputs.stm_project_id }} | grep "${{ env.DBT_DATASET }}" | xargs -n1 bq rm -r -f --project_id ${{ inputs.stm_project_id }} -d
 
       - name: Generate single HTML docs file
-        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.2
+        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v4.5.0
         with:
           dbt-path: ${{ inputs.dbt_path }}
 
@@ -103,7 +103,7 @@ jobs:
         run: gsutil cp target/single_index.html gs://${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html
 
       - name: Setup gcloud for ATM
-        uses: svvsaga/github-actions-public/setup-gcloud@v22.3.4
+        uses: svvsaga/github-actions-public/setup-gcloud@v24.0.0
         with:
           environment: ATM
           app_root: ${{ inputs.projects_config_path }}
@@ -141,7 +141,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Post catalog diff to PR
-        uses: thollander/actions-comment-pull-request@632cf9ce90574d125be56b5f3405cda41a84e2fd
+        uses: thollander/actions-comment-pull-request@v2.4.3
         with:
           message: |
             [dbt docs for this PR](https://storage.cloud.google.com/${{ inputs.stm_docs_bucket }}/pr/${{ env.DBT_DATASET }}.html?authuser=0)

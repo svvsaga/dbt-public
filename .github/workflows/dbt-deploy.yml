@@ -52,15 +52,15 @@ jobs:
         working-directory: ${{ inputs.dbt_path }}
     steps:
       - name: Check out
-        uses: actions/checkout@master
+        uses: actions/checkout@v4
 
       - name: Install python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.7.x"
 
       - name: Setup gcloud
-        uses: svvsaga/github-actions-public/setup-gcloud@v22.3.4
+        uses: svvsaga/github-actions-public/setup-gcloud@v24.0.0
         with:
           environment: ${{ inputs.environment }}
           app_root: ${{ inputs.projects_config_path }}
@@ -94,7 +94,7 @@ jobs:
         run: dbt docs generate ${{ inputs.dbt_args }}
 
       - name: Generate single HTML docs file
-        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v1.0.2
+        uses: svvsaga/dbt-public/.github/actions/generate-single-doc-file@v4.5.0
         with:
           dbt-path: ${{ inputs.dbt_path }}
 
